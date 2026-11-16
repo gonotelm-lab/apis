@@ -43,25 +43,17 @@ git checkout -B "${BRANCH}"
 
 git add -A
 if git diff --cached --quiet; then
-  echo "no changes for ${BRANCH}"
-  if [[ "${SKIP_PUSH:-}" == "1" ]]; then
-    echo "SKIP_PUSH=1: not pushing"
-    exit 0
-  fi
-  if [[ -n "${PUSH_TAG}" ]]; then
-    git tag -f "${PUSH_TAG}"
-    git push origin "refs/tags/${PUSH_TAG}" --force
-  fi
-  exit 0
+  echo "no content changes for ${BRANCH}"
+else
+  git commit -m "chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF})"
 fi
-
-git commit -m "chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF})"
 
 if [[ "${SKIP_PUSH:-}" == "1" ]]; then
   echo "SKIP_PUSH=1: not pushing"
   exit 0
 fi
 
+# Always push branch ref so same-name branches exist even when generated code is unchanged.
 git push -u origin "HEAD:${BRANCH}"
 
 if [[ -n "${PUSH_TAG}" ]]; then
