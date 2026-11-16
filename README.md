@@ -13,3 +13,5 @@ buf generate
 ```
 
 产物在 `.generated/`（已 gitignore），勿提交。
+
+<!-- smoke -->
