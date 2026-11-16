@@ -39,6 +39,7 @@ jobs:
         with:
           name: generated
           path: .generated/
+          include-hidden-files: true
           retention-days: 1
 
   sync:
