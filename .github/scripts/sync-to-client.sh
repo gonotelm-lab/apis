@@ -63,23 +63,32 @@ if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
   go mod tidy
 fi
 
+SHORT_SHA="${SOURCE_SHA:0:7}"
+COMMIT_URL="https://github.com/${SOURCE_REPO}/commit/${SHORT_SHA}"
+PR_URL=""
+if [[ -n "${SOURCE_PR}" ]]; then
+  PR_URL="https://github.com/${SOURCE_REPO}/pull/${SOURCE_PR}"
+fi
+
 # Always record the exact apis commit this client tree was generated from.
 # This guarantees a commit (and message) even when generated code is unchanged.
 {
   echo "repo=${SOURCE_REPO}"
   echo "sha=${SOURCE_SHA}"
+  echo "short_sha=${SHORT_SHA}"
   echo "ref=${SOURCE_REF}"
+  echo "commit_url=${COMMIT_URL}"
   if [[ -n "${SOURCE_PR}" ]]; then
     echo "pr=${SOURCE_PR}"
-    echo "pr_url=https://github.com/${SOURCE_REPO}/pull/${SOURCE_PR}"
+    echo "pr_url=${PR_URL}"
   fi
-  echo "commit_url=https://github.com/${SOURCE_REPO}/commit/${SOURCE_SHA}"
 } > APIS_SOURCE
 
-if [[ -n "${SOURCE_PR}" ]]; then
-  COMMIT_MSG="chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF}, PR #${SOURCE_PR})"
+# Full GitHub URLs so the commit message is clickable in the GitHub UI.
+if [[ -n "${PR_URL}" ]]; then
+  COMMIT_MSG="chore: sync from ${COMMIT_URL} (${SOURCE_REF}) ${PR_URL}"
 else
-  COMMIT_MSG="chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF})"
+  COMMIT_MSG="chore: sync from ${COMMIT_URL} (${SOURCE_REF})"
 fi
 
 git add -A
