@@ -12,6 +12,7 @@ set -euo pipefail
 #   PUSH_TAG         - optional; if set, create this tag
 #   TAG_ONLY         - if 1, only push the tag (do not update any branch)
 #   SKIP_PUSH        - if 1, commit locally only
+#   RUN_GO_MOD_TIDY  - if 1, run go mod tidy after copying generated code
 
 CLIENT_DIR="${CLIENT_DIR:?}"
 ARTIFACT_DIR="${ARTIFACT_DIR:?}"
@@ -23,20 +24,7 @@ GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-gonotelm-lab-bot}"
 GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-bot@users.noreply.github.com}"
 PUSH_TAG="${PUSH_TAG:-}"
 TAG_ONLY="${TAG_ONLY:-0}"
-
-DEST="${CLIENT_DIR}"
-if [[ "${DEST_PREFIX}" != "." ]]; then
-  DEST="${CLIENT_DIR}/${DEST_PREFIX}"
-  mkdir -p "${DEST}"
-fi
-
-# Remove previously generated apps tree under dest; keep scaffold files at repo root.
-if [[ -d "${DEST}/apps" ]]; then
-  rm -rf "${DEST}/apps"
-fi
-
-mkdir -p "${DEST}"
-cp -a "${ARTIFACT_DIR}/apps" "${DEST}/"
+RUN_GO_MOD_TIDY="${RUN_GO_MOD_TIDY:-0}"
 
 cd "${CLIENT_DIR}"
 git config user.name "${GIT_AUTHOR_NAME}"
@@ -48,6 +36,27 @@ if [[ "${TAG_ONLY}" == "1" ]]; then
   git checkout -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
 else
   git checkout -B "${BRANCH}"
+fi
+
+DEST="${CLIENT_DIR}"
+if [[ "${DEST_PREFIX}" != "." ]]; then
+  DEST="${CLIENT_DIR}/${DEST_PREFIX}"
+  mkdir -p "${DEST}"
+fi
+
+# Replace generated apps tree; keep scaffold files (.gitignore, go.mod, package.json, ...).
+if [[ -d "${DEST}/apps" ]]; then
+  rm -rf "${DEST}/apps"
+fi
+mkdir -p "${DEST}"
+cp -a "${ARTIFACT_DIR}/apps" "${DEST}/"
+
+if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
+  if [[ ! -f go.mod ]]; then
+    echo "ERROR: RUN_GO_MOD_TIDY=1 but go.mod missing" >&2
+    exit 1
+  fi
+  go mod tidy
 fi
 
 git add -A

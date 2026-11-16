@@ -58,11 +58,13 @@ jobs:
             repo_full: gonotelm-lab/apis-go-client
             artifact_subdir: go
             dest_prefix: "."
+            run_go_mod_tidy: "1"
           - language: nodejs
             repo: apis-nodejs-client
             repo_full: gonotelm-lab/apis-nodejs-client
             artifact_subdir: ts
             dest_prefix: "src"
+            run_go_mod_tidy: "0"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -90,6 +92,12 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           path: client
           fetch-depth: 0
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+          cache-dependency-path: client/go.sum
       - name: Sync and push
         env:
           CLIENT_DIR: ${{ github.workspace }}/client
@@ -100,6 +108,7 @@ jobs:
           SOURCE_REF: ${{ inputs.source_ref }}
           PUSH_TAG: ${{ inputs.tag }}
           TAG_ONLY: ${{ inputs.tag_only && '1' || '0' }}
+          RUN_GO_MOD_TIDY: ${{ matrix.run_go_mod_tidy }}
           GIT_AUTHOR_NAME: gonotelm-apis-bot
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         run: bash apis-src/.github/scripts/sync-to-client.sh
