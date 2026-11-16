@@ -1,0 +1,36 @@
+name: delete-client-branches
+on:
+  delete:
+
+jobs:
+  delete:
+    if: github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - repo: apis-go-client
+            repo_full: gonotelm-lab/apis-go-client
+          - repo: apis-nodejs-client
+            repo_full: gonotelm-lab/apis-nodejs-client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      - name: Create App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: gonotelm-lab
+          repositories: ${{ matrix.repo }}
+      - name: Delete branch on client
+        env:
+          BRANCH: ${{ github.event.ref }}
+          CLIENT_REPO: ${{ matrix.repo_full }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: bash .github/scripts/delete-client-branch.sh

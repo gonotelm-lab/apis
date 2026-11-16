@@ -1,0 +1,99 @@
+name: reusable-generate-sync
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      source_sha:
+        required: true
+        type: string
+      source_ref:
+        required: true
+        type: string
+      tag:
+        required: false
+        type: string
+        default: ""
+    secrets:
+      APP_ID:
+        required: true
+      APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: buf generate
+        run: |
+          buf dep update
+          buf generate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated
+          path: .generated/
+          retention-days: 1
+
+  sync:
+    needs: generate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - language: go
+            repo: apis-go-client
+            repo_full: gonotelm-lab/apis-go-client
+            artifact_subdir: go
+            dest_prefix: "."
+          - language: nodejs
+            repo: apis-nodejs-client
+            repo_full: gonotelm-lab/apis-nodejs-client
+            artifact_subdir: ts
+            dest_prefix: "src"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+          path: apis-src
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated
+          path: generated
+      - name: Create App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: gonotelm-lab
+          repositories: ${{ matrix.repo }}
+      - name: Checkout client
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo_full }}
+          token: ${{ steps.app-token.outputs.token }}
+          path: client
+          fetch-depth: 0
+      - name: Sync and push
+        env:
+          CLIENT_DIR: ${{ github.workspace }}/client
+          ARTIFACT_DIR: ${{ github.workspace }}/generated/${{ matrix.artifact_subdir }}
+          DEST_PREFIX: ${{ matrix.dest_prefix }}
+          BRANCH: ${{ inputs.branch }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+          PUSH_TAG: ${{ inputs.tag }}
+          GIT_AUTHOR_NAME: gonotelm-apis-bot
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: bash apis-src/.github/scripts/sync-to-client.sh

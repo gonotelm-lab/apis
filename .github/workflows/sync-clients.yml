@@ -1,0 +1,42 @@
+name: sync-clients
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*"
+
+jobs:
+  branch-sync:
+    if: github.ref_type == 'branch'
+    uses: ./.github/workflows/reusable-generate-sync.yml
+    with:
+      branch: ${{ github.ref_name }}
+      source_sha: ${{ github.sha }}
+      source_ref: ${{ github.ref_name }}
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+
+  tag-sync-assert:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assert tag on main
+        run: bash .github/scripts/assert-tag-on-main.sh "${{ github.ref_name }}"
+
+  tag-sync:
+    needs: tag-sync-assert
+    if: github.ref_type == 'tag'
+    uses: ./.github/workflows/reusable-generate-sync.yml
+    with:
+      branch: main
+      source_sha: ${{ github.sha }}
+      source_ref: ${{ github.ref_name }}
+      tag: ${{ github.ref_name }}
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
