@@ -8,6 +8,7 @@ set -euo pipefail
 #   SOURCE_SHA       - apis commit sha
 #   SOURCE_REF       - branch or tag name for message
 #   SOURCE_PR        - optional apis PR number associated with SOURCE_SHA
+#   SOURCE_REPO      - apis repo full name (default gonotelm-lab/apis)
 #   GIT_AUTHOR_NAME  - bot name
 #   GIT_AUTHOR_EMAIL - bot email
 #   PUSH_TAG         - optional; if set, create this tag
@@ -22,6 +23,7 @@ BRANCH="${BRANCH:?}"
 SOURCE_SHA="${SOURCE_SHA:?}"
 SOURCE_REF="${SOURCE_REF:?}"
 SOURCE_PR="${SOURCE_PR:-}"
+SOURCE_REPO="${SOURCE_REPO:-gonotelm-lab/apis}"
 GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-gonotelm-lab-bot}"
 GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-bot@users.noreply.github.com}"
 PUSH_TAG="${PUSH_TAG:-}"
@@ -61,6 +63,19 @@ if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
   go mod tidy
 fi
 
+# Always record the exact apis commit this client tree was generated from.
+# This guarantees a commit (and message) even when generated code is unchanged.
+{
+  echo "repo=${SOURCE_REPO}"
+  echo "sha=${SOURCE_SHA}"
+  echo "ref=${SOURCE_REF}"
+  if [[ -n "${SOURCE_PR}" ]]; then
+    echo "pr=${SOURCE_PR}"
+    echo "pr_url=https://github.com/${SOURCE_REPO}/pull/${SOURCE_PR}"
+  fi
+  echo "commit_url=https://github.com/${SOURCE_REPO}/commit/${SOURCE_SHA}"
+} > APIS_SOURCE
+
 if [[ -n "${SOURCE_PR}" ]]; then
   COMMIT_MSG="chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF}, PR #${SOURCE_PR})"
 else
@@ -69,7 +84,7 @@ fi
 
 git add -A
 if git diff --cached --quiet; then
-  echo "no content changes"
+  echo "no content changes (unexpected if APIS_SOURCE should update)"
 else
   git commit -m "${COMMIT_MSG}"
 fi
