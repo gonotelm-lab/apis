@@ -1,0 +1,25 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/gonotelm-lab/apis-go-client
+  disable:
+    - file_option: go_package
+      module: buf.build/googleapis/googleapis
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: .generated/go
+    opt:
+      - paths=source_relative
+  - remote: buf.build/grpc/go
+    out: .generated/go
+    opt:
+      - paths=source_relative
+  - remote: buf.build/community/stephenh-ts-proto
+    out: .generated/ts
+    opt:
+      - paths=source_relative
+      - env=node
+      - outputServices=grpc-js
+      - esModuleInterop=true

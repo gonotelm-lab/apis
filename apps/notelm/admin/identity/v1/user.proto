@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package apps.notelm.admin.identity.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
+
+option go_package = "github.com/gonotelm-lab/apis-go-client/apps/notelm/admin/identity/v1;identity";
+
+message User {
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_ACTIVE = 1;
+    STATUS_BANNED = 2;
+  }
+
+  string id = 1;
+  string nickname = 2;
+  google.protobuf.Timestamp email_verified_at = 3;
+  Status status = 4;
+  string avatar = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message GetUserRequest {
+  string id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message GetUserResponse {
+  User user = 1;
+}

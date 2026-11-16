@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package apps.notelm.admin.identity.v1;
+
+import "apps/notelm/admin/identity/v1/user.proto";
+
+option go_package = "github.com/gonotelm-lab/apis-go-client/apps/notelm/admin/identity/v1;identity";
+
+service IdentityService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
