@@ -7,6 +7,7 @@ set -euo pipefail
 #   BRANCH           - branch to push (ignored when TAG_ONLY=1 except as local base)
 #   SOURCE_SHA       - apis commit sha
 #   SOURCE_REF       - branch or tag name for message
+#   SOURCE_PR        - optional apis PR number associated with SOURCE_SHA
 #   GIT_AUTHOR_NAME  - bot name
 #   GIT_AUTHOR_EMAIL - bot email
 #   PUSH_TAG         - optional; if set, create this tag
@@ -20,6 +21,7 @@ DEST_PREFIX="${DEST_PREFIX:?}"
 BRANCH="${BRANCH:?}"
 SOURCE_SHA="${SOURCE_SHA:?}"
 SOURCE_REF="${SOURCE_REF:?}"
+SOURCE_PR="${SOURCE_PR:-}"
 GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-gonotelm-lab-bot}"
 GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-bot@users.noreply.github.com}"
 PUSH_TAG="${PUSH_TAG:-}"
@@ -59,11 +61,17 @@ if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
   go mod tidy
 fi
 
+if [[ -n "${SOURCE_PR}" ]]; then
+  COMMIT_MSG="chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF}, PR #${SOURCE_PR})"
+else
+  COMMIT_MSG="chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF})"
+fi
+
 git add -A
 if git diff --cached --quiet; then
   echo "no content changes"
 else
-  git commit -m "chore: sync from apis@${SOURCE_SHA} (${SOURCE_REF})"
+  git commit -m "${COMMIT_MSG}"
 fi
 
 COMMIT="$(git rev-parse HEAD)"
