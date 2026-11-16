@@ -32,3 +32,16 @@ message GetUserRequest {
 message GetUserResponse {
   User user = 1;
 }
+
+message SetUserStatusRequest {
+  string id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  User.Status status = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message SetUserStatusResponse {
+  User user = 1;
+}
