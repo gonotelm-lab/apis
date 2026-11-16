@@ -2,6 +2,11 @@ name: delete-client-branches
 on:
   delete:
 
+# Same group key as sync-clients for a given branch name, so delete waits for sync (and vice versa).
+concurrency:
+  group: apis-client-${{ github.event.ref }}
+  cancel-in-progress: false
+
 jobs:
   delete:
     if: github.event.ref_type == 'branch'
