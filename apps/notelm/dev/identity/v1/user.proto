@@ -1,11 +1,12 @@
 syntax = "proto3";
 
-package apps.notelm.admin.identity.v1;
+package apps.notelm.dev.identity.v1;
 
-import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/gonotelm-lab/apis-go-client/apps/notelm/admin/identity/v1;identity";
+option go_package = "github.com/gonotelm-lab/apis-go-client/apps/notelm/dev/identity/v1;identity";
 
 message User {
   enum Status {
@@ -25,7 +26,8 @@ message User {
 
 message GetUserRequest {
   string id = 1 [
-    (google.api.field_behavior) = REQUIRED
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string.min_len = 1
   ];
 }
 
@@ -35,10 +37,15 @@ message GetUserResponse {
 
 message SetUserStatusRequest {
   string id = 1 [
-    (google.api.field_behavior) = REQUIRED
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string.min_len = 1
   ];
   User.Status status = 2 [
-    (google.api.field_behavior) = REQUIRED
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).enum = {
+      defined_only: true
+      not_in: [0]
+    }
   ];
 }
 

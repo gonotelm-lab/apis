@@ -4,9 +4,11 @@ modules:
     name: buf.build/gonotelm-lab/apis
 deps:
   - buf.build/googleapis/googleapis
+  - buf.build/bufbuild/protovalidate
 lint:
   use:
     - STANDARD
+    - PROTOVALIDATE
 breaking:
   use:
     - FILE
