@@ -119,8 +119,10 @@ if [[ "${TAG_ONLY}" == "1" ]]; then
   exit 0
 fi
 
-# Always push branch ref so same-name branches exist even when generated code is unchanged.
-git push -u origin "HEAD:${BRANCH}"
+# Client feature branches are bot-owned mirrors rebuilt from main + generated code.
+# Each sync rewrites the branch tip, so a plain push is non-fast-forward after the first sync.
+git fetch origin "refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2>/dev/null || true
+git push -u --force-with-lease origin "HEAD:${BRANCH}"
 
 if [[ -n "${PUSH_TAG}" ]]; then
   git tag -f "${PUSH_TAG}" "${COMMIT}"
