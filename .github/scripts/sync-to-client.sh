@@ -68,9 +68,9 @@ fi
 
 if [[ "${RUN_NODE_BUILD}" == "1" ]]; then
   if [[ -f package-lock.json ]]; then
-    npm ci --no-audit --no-fund
+    npm ci --no-audit --no-fund --ignore-scripts
   else
-    npm install --no-audit --no-fund
+    npm install --no-audit --no-fund --ignore-scripts
   fi
   npm run build
   test -f dist/cjs/index.js
