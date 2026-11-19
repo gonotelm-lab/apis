@@ -25,3 +25,5 @@ plugins:
       - env=node
       - outputServices=grpc-js
       - esModuleInterop=true
+      - importSuffix=.js
+      - exportCommonSymbols=false
