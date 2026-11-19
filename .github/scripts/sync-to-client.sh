@@ -77,6 +77,10 @@ if [[ "${RUN_NODE_BUILD}" == "1" ]]; then
   test -f dist/esm/index.js
   test -f dist/cjs/index.d.ts
   test -f dist/esm/index.d.ts
+  test -f dist/cjs/callback.js
+  test -f dist/esm/callback.js
+  test -f dist/cjs/callback.d.ts
+  test -f dist/esm/callback.d.ts
   if [[ -n "${PUSH_TAG}" ]]; then
     npm pkg set version="${PUSH_TAG#v}"
   fi
