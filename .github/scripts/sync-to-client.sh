@@ -15,6 +15,7 @@ set -euo pipefail
 #   TAG_ONLY         - if 1, only push the tag (do not update any branch)
 #   SKIP_PUSH        - if 1, commit locally only
 #   RUN_GO_MOD_TIDY  - if 1, run go mod tidy after copying generated code
+#   RUN_NODE_BUILD   - if 1, install deps and run npm run build after copying generated code
 
 CLIENT_DIR="${CLIENT_DIR:?}"
 ARTIFACT_DIR="${ARTIFACT_DIR:?}"
@@ -29,6 +30,7 @@ GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-bot@users.noreply.github.com}"
 PUSH_TAG="${PUSH_TAG:-}"
 TAG_ONLY="${TAG_ONLY:-0}"
 RUN_GO_MOD_TIDY="${RUN_GO_MOD_TIDY:-0}"
+RUN_NODE_BUILD="${RUN_NODE_BUILD:-0}"
 
 cd "${CLIENT_DIR}"
 git config user.name "${GIT_AUTHOR_NAME}"
@@ -48,12 +50,13 @@ if [[ "${DEST_PREFIX}" != "." ]]; then
   mkdir -p "${DEST}"
 fi
 
-# Replace generated apps tree; keep scaffold files (.gitignore, go.mod, package.json, ...).
-if [[ -d "${DEST}/apps" ]]; then
-  rm -rf "${DEST}/apps"
-fi
-mkdir -p "${DEST}"
-cp -a "${ARTIFACT_DIR}/apps" "${DEST}/"
+# Replace generated trees; keep scaffold files (.gitignore, go.mod, package.json, ...).
+for dir in apps google buf; do
+  rm -rf "${DEST}/${dir}"
+  if [[ -d "${ARTIFACT_DIR}/${dir}" ]]; then
+    cp -a "${ARTIFACT_DIR}/${dir}" "${DEST}/"
+  fi
+done
 
 if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
   if [[ ! -f go.mod ]]; then
@@ -61,6 +64,22 @@ if [[ "${RUN_GO_MOD_TIDY}" == "1" ]]; then
     exit 1
   fi
   go mod tidy
+fi
+
+if [[ "${RUN_NODE_BUILD}" == "1" ]]; then
+  if [[ -f package-lock.json ]]; then
+    npm ci --no-audit --no-fund
+  else
+    npm install --no-audit --no-fund
+  fi
+  npm run build
+  test -f dist/cjs/index.js
+  test -f dist/esm/index.js
+  test -f dist/cjs/index.d.ts
+  test -f dist/esm/index.d.ts
+  if [[ -n "${PUSH_TAG}" ]]; then
+    npm pkg set version="${PUSH_TAG#v}"
+  fi
 fi
 
 SHORT_SHA="${SOURCE_SHA:0:7}"
