@@ -40,6 +40,11 @@ BASE_BRANCH="main"
 if [[ "${TAG_ONLY}" == "1" ]]; then
   git fetch origin "${BASE_BRANCH}"
   git checkout -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
+elif git fetch origin "refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" 2>/dev/null; then
+  # Continue an existing client branch instead of resetting it to main, so
+  # branch-local scaffold (package.json, hand-written entries) survives until
+  # it lands on main.
+  git checkout -B "${BRANCH}" "origin/${BRANCH}"
 else
   git checkout -B "${BRANCH}"
 fi
