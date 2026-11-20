@@ -82,10 +82,10 @@ if [[ "${RUN_NODE_BUILD}" == "1" ]]; then
   test -f dist/esm/index.js
   test -f dist/cjs/index.d.ts
   test -f dist/esm/index.d.ts
-  test -f dist/cjs/callback.js
-  test -f dist/esm/callback.js
-  test -f dist/cjs/callback.d.ts
-  test -f dist/esm/callback.d.ts
+  test -n "$(find dist/cjs/apps -name promise.js -print -quit)"
+  test -n "$(find dist/esm/apps -name promise.js -print -quit)"
+  test -n "$(find dist/cjs/apps -name promise.d.ts -print -quit)"
+  test -n "$(find dist/esm/apps -name promise.d.ts -print -quit)"
   npm test
   if [[ -n "${PUSH_TAG}" ]]; then
     npm pkg set version="${PUSH_TAG#v}"

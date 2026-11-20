@@ -23,8 +23,7 @@ plugins:
     opt:
       - paths=source_relative
       - env=node
-      - outputServices=nice-grpc,outputServices=generic-definitions
+      - outputServices=grpc-js
       - esModuleInterop=true
       - importSuffix=.js
       - exportCommonSymbols=false
-      - useExactTypes=false
