@@ -8,6 +8,25 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/gonotelm-lab/apis-go-client/apps/notelm/dev/identity/v1;identity";
 
+// Identity 账号已绑定的一条三方身份
+message Identity {
+  enum Provider {
+    PROVIDER_UNSPECIFIED = 0;
+    PROVIDER_GITHUB = 1;
+    PROVIDER_GOOGLE = 2;
+  }
+
+  // 绑定记录 id（解绑时用）
+  string id = 1;
+  Provider provider = 2;
+  // 三方侧 subject（全局唯一键的一部分）
+  string subject = 3;
+  string provider_email = 4;
+  bool provider_email_verified = 5;
+  google.protobuf.Timestamp bound_at = 6;
+  google.protobuf.Timestamp last_login_at = 7;
+}
+
 message User {
   enum Status {
     STATUS_UNSPECIFIED = 0;
@@ -23,6 +42,7 @@ message User {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
   bool has_password = 8;
+  repeated Identity identities = 9;
 }
 
 message GetUserRequest {
